@@ -1,47 +1,54 @@
 import { Request, Response, NextFunction } from "express";
-import { User } from "../models/User";
 import { verifyToken } from "../utils/jwt";
 import { ApiError } from "../utils/ApiError";
-import { asyncHandler } from "../utils/asyncHandler";
+import { User } from "../models/User";
 
 export interface AuthRequest extends Request {
   user?: { id: string; role: string };
 }
 
-export const auth = asyncHandler(async (req, _res, next) => {
-  const token = req.cookies?.token;
+const allowedBeforePasswordChange = [
+  "/api/auth/me",
+  "/api/auth/me/password",
+  "/api/auth/logout",
+];
 
-  if (!token) {
-    throw new ApiError(401, "Unauthorized: please login");
-  }
-
-  let payload: ReturnType<typeof verifyToken>;
+export const auth = async (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+) => {
   try {
-    payload = verifyToken(token);
-  } catch {
-    throw new ApiError(401, "Invalid or expired token");
-  }
+    const token = req.cookies?.token;
+    if (!token) throw new ApiError(401, "Unauthorized: please login");
 
-  const user = await User.findById(payload.id).select("isActive mustChangePassword");
-  if (!user) {
-    throw new ApiError(401, "Invalid or expired token");
-  }
-  if (!user.isActive) {
-    throw new ApiError(403, "Your account is inactive");
-  }
+    let payload;
+    try {
+      payload = verifyToken(token);
+    } catch {
+      throw new ApiError(401, "Invalid or expired token");
+    }
 
-  (req as AuthRequest).user = payload;
+    const user = await User.findById(payload.id).select(
+      "role isActive mustChangePassword"
+    );
+    if (!user) throw new ApiError(401, "User no longer exists");
 
-  if (
-    user.mustChangePassword &&
-    req.path !== "/change-password" &&
-    req.path !== "/me"
-  ) {
-    throw new ApiError(403, "You must change your password before continuing");
+    if (!user.isActive) {
+      throw new ApiError(403, "Your account is blocked");
+    }
+
+    const path = req.originalUrl.split("?")[0];
+    if (user.mustChangePassword && !allowedBeforePasswordChange.includes(path)) {
+      throw new ApiError(403, "You must change your password before continuing");
+    }
+
+    req.user = { id: payload.id, role: user.role };
+    next();
+  } catch (error) {
+    next(error);
   }
-
-  next();
-});
+};
 
 export const authorize =
   (...roles: string[]) =>
