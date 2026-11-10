@@ -1,42 +1,51 @@
-import express from "express";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
+dotenv.config();
+
+import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
+
+import { connectDB } from "./config/db";
 import { errorHandler } from "./middleware/errorHandler";
 import authRoutes from "./routers/auth.routers";
-
-dotenv.config();
+import dashboardRoutes from "./routers/dashboard.routers";
 
 const app = express();
-
 const PORT = process.env.PORT || 5000;
 
 app.use(helmet());
-app.use(cors());
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
+
+app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(express.json());
 
+// Health Check
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-// Import and use your routes here
+// Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+
+// Global Error Handler
 app.use(errorHandler);
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URL as string);
-    console.log("Database Connected");
-  } catch (error) {
-    console.log(error);
-  }
+const startServer = async () => {
+  await connectDB();
+
+  app.listen(PORT, () => {
+    console.log(`Server running on ${PORT}`);
+  });
 };
 
-connectDB();
-
-app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
-});
+startServer();
