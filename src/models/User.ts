@@ -12,6 +12,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please provide a valid email"],
     },
+    phone:{
+     type: String,
+     required: [true, "Phone number is required"],
+     unique: true,
+     match: [/^01[3-9]\d{8}$/, "Please provide a valid phone number"],
+    },
     password: {
       type: String,
       required: [true, "Password is required"],
@@ -24,6 +30,7 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     isActive: { type: Boolean, default: true },
+    mustChangePassword: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
