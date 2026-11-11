@@ -4,7 +4,7 @@ import { User } from "../models/User";
 import { ApiError } from "../utils/ApiError";
 import { signToken } from "../utils/jwt";
 
-// Login Service
+
 export const loginService = async (
   email: string,
   phone: string,

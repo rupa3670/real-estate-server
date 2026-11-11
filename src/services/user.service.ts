@@ -2,14 +2,13 @@
 import { User } from "../models/User";
 import { ApiError } from "../utils/ApiError";
 
-// Staff Role Validation
 const isStaffRole = (
   role: string
 ): role is "manager" | "accountant" => {
   return role === "manager" || role === "accountant";
 };
 
-// Create User
+
 export const createUserService = async (data: {
   name: string;
   email: string;
