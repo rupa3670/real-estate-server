@@ -35,15 +35,6 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(express.json());
 
-app.use(async (_req, _res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
 app.get("/", (_req, res) => {
   res.json({ message: "Real Estate Server is running!" });
 });
@@ -64,12 +55,10 @@ app.use("/api/masons", masonRoutes);
 
 app.use(errorHandler);
 
-if (process.env.NODE_ENV !== "production") {
-  connectDB().then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running on ${PORT}`);
-    });
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on ${PORT}`);
   });
-}
+});
 
 export default app;
