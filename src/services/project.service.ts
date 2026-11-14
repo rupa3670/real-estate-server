@@ -1,4 +1,3 @@
-
 import { Project } from "../models/Projects";
 import { User } from "../models/User";
 import { ApiError } from "../utils/ApiError";
@@ -6,15 +5,27 @@ import { ApiError } from "../utils/ApiError";
 export const createProjectService = async (
   data: {
     name: string;
+    location: string;
+    description?: string;
     estimatedBudget: number;
     manager: string;
+    startDate?: string;
+    endDate?: string;
   },
   adminId: string
 ) => {
-  const { name, estimatedBudget, manager } = data;
+  const {
+    name,
+    location,
+    description,
+    estimatedBudget,
+    manager,
+    startDate,
+    endDate,
+  } = data;
 
-  if (!name || !estimatedBudget || !manager) {
-    throw new ApiError(400, "All fields are required");
+  if (!name || !location || !estimatedBudget || !manager) {
+    throw new ApiError(400, "Name, location, budget and manager are required");
   }
 
   if (estimatedBudget <= 0) {
@@ -26,14 +37,16 @@ export const createProjectService = async (
     throw new ApiError(400, "Invalid manager");
   }
 
-  const project = await Project.create({
+  return Project.create({
     name: name.trim(),
+    location: location.trim(),
+    description: description?.trim(),
     estimatedBudget,
     manager,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
     createdBy: adminId,
   });
-
-  return project;
 };
 
 export const getProjectsService = async (userId: string, role: string) => {

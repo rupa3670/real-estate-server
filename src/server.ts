@@ -16,7 +16,8 @@ import projectRoutes from "./routers/project.routers";
 import fundRequestRoutes from "./routers/fundRequest.routers";
 import expenseRoutes from "./routers/expense.routers";
 import paymentRoutes from "./routers/payment.router";
-
+import engineerRoutes from "./routers/engineer.router";
+import mesonRoutes from "./routers/meson.router";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -46,6 +47,8 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/fund-requests", fundRequestRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/engineers", engineerRoutes);
+app.use("/api/mesons",mesonRoutes);
 
 // Global Error Handler
 app.use(errorHandler);
