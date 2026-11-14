@@ -17,7 +17,8 @@ import fundRequestRoutes from "./routers/fundRequest.routers";
 import expenseRoutes from "./routers/expense.routers";
 import paymentRoutes from "./routers/payment.router";
 import engineerRoutes from "./routers/engineer.router";
-import mesonRoutes from "./routers/meson.router";
+import masonRoutes from "./routers/meson.router";
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -34,12 +35,23 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(express.json());
 
-// Health Check
+app.use(async (_req, _res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/", (_req, res) => {
+  res.json({ message: "Real Estate Server is running!" });
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -48,17 +60,16 @@ app.use("/api/fund-requests", fundRequestRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/engineers", engineerRoutes);
-app.use("/api/mesons",mesonRoutes);
+app.use("/api/masons", masonRoutes);
 
-// Global Error Handler
 app.use(errorHandler);
 
-const startServer = async () => {
-  await connectDB();
-
-  app.listen(PORT, () => {
-    console.log(`Server running on ${PORT}`);
+if (process.env.NODE_ENV !== "production") {
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on ${PORT}`);
+    });
   });
-};
+}
 
-startServer();
+export default app;
